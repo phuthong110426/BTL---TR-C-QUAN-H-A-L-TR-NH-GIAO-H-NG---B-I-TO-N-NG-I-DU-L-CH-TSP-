@@ -1,0 +1,5 @@
+comparison,w_plus,w_minus,w_stat,z_score,p_value,method,n_effective,significant_alpha_005
+SA vs Memetic,28.0,0.0,0.0,2.2819,0.015625,exact,7,True
+TS vs Memetic,21.0,0.0,0.0,2.0966,0.03125,exact,6,True
+GA vs Memetic,66.0,0.0,0.0,2.8896,0.000977,exact,11,True
+ACO vs Memetic,28.0,0.0,0.0,2.286,0.015625,exact,7,True

@@ -1,0 +1,17 @@
+algorithm,parameter,value,best_cost,mean_cost,std_cost,mean_gap_pct
+SA,alpha (cooling rate),0.95,7542.0,7818.8,170.14,3.67
+SA,alpha (cooling rate),0.985,7542.0,7642.8,159.49,1.337
+SA,alpha (cooling rate),0.995,7542.0,7785.8,253.63,3.233
+SA,alpha (cooling rate),0.999,7542.0,7542.0,0.0,0.0
+TS,tabu_tenure,5,7542.0,7708.0,160.35,2.201
+TS,tabu_tenure,15,7542.0,7705.8,159.92,2.172
+TS,tabu_tenure,30,7547.0,7583.6,38.08,0.552
+TS,tabu_tenure,50,7561.0,7592.2,36.93,0.666
+GA,crossover + mutation_rate,"OX, pm=0.05",7841.0,8165.6,275.8,8.268
+GA,crossover + mutation_rate,"OX, pm=0.2",7596.0,7956.8,223.31,5.5
+GA,crossover + mutation_rate,"OX, pm=0.35",7663.0,7908.6,193.69,4.861
+GA,crossover + mutation_rate,"PMX, pm=0.2",7542.0,7859.0,220.63,4.203
+ACO,"beta, rho","beta=1.0, rho=0.15",7542.0,7641.4,118.28,1.318
+ACO,"beta, rho","beta=3.0, rho=0.15",7542.0,7542.0,0.0,0.0
+ACO,"beta, rho","beta=5.0, rho=0.15",7542.0,7576.6,77.37,0.459
+ACO,"beta, rho","beta=3.0, rho=0.35",7542.0,7750.4,155.59,2.763

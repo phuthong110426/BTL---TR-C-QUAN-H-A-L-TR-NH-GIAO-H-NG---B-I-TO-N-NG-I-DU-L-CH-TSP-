@@ -1,0 +1,247 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[T5]{fontenc}
+\usepackage[vietnamese]{babel}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\geometry{left=2.8cm,right=2.2cm,top=2.5cm,bottom=2.5cm}
+\hypersetup{colorlinks=true,linkcolor=blue!70!black,citecolor=blue!70!black,urlcolor=blue!70!black}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Phân tích thiết kế giải thuật}
+\fancyhead[R]{\small Đề tài 1: Bài toán Người du lịch (TSP)}
+\fancyfoot[C]{\thepage}
+
+\begin{document}
+
+% ==================== TRANG BÌA ====================
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    {\large \textbf{TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI THÀNH PHỐ HỒ CHÍ MINH}}\\[0.3cm]
+    {\normalsize \textbf{NGÀNH CÔNG NGHỆ THÔNG TIN}}\\[3.5cm]
+
+    {\huge \textbf{BÁO CÁO BÀI TẬP LỚN}}\\[0.6cm]
+    {\Large \textbf{HỌC PHẦN: PHÂN TÍCH THIẾT KẾ GIẢI THUẬT}}\\[1.2cm]
+
+    \rule{0.7\textwidth}{0.8pt}\\[0.6cm]
+    {\LARGE \textbf{ĐỀ TÀI 1: LỘ TRÌNH XE GIAO HÀNG}}\\[0.3cm]
+    {\Large \textbf{BÀI TOÁN NGƯỜI DU LỊCH (TSP) VÀ CÁC GIẢI THUẬT METAHEURISTIC}}\\[0.6cm]
+    \rule{0.7\textwidth}{0.8pt}\\[2.5cm]
+
+    \begin{flushleft}
+    \hspace{2.5cm}\textbf{Quy mô nhóm:} 4 thành viên\\
+    \hspace{2.5cm}\textbf{Các thuật toán thực hiện:}
+    \begin{itemize}
+        \setlength{\itemindent}{2.8cm}
+        \item Chính xác: Quy hoạch động Held--Karp $\mathcal{O}(n^2 2^n)$, Nhánh cận (B\&B)
+        \item Heuristic xây dựng: Nearest Neighbor, Multi-Start NN, Cheapest Insertion
+        \item Tìm kiếm cục bộ: 2-opt, Swap, Or-opt (First \& Best Improvement, Delta $\mathcal{O}(1)$)
+        \item Metaheuristic: Simulated Annealing (SA), Tabu Search (TS), Genetic Algorithm (GA), Ant Colony Optimization (ACO)
+        \item Thuật toán Lai: Memetic Algorithm (GA + 2-opt + Double-Bridge)
+        \item Kiểm định thống kê: Friedman Test \& Wilcoxon Signed-Rank Test
+    \end{itemize}
+    \end{flushleft}
+
+    \vfill
+    {\normalsize Thành phố Hồ Chí Minh -- Năm học 2026--2027}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ==================== CHƯƠNG 1 ====================
+\chapter{Phát biểu bài toán và Mô hình toán học}
+
+\section{Mô tả thực tế và ứng dụng}
+Trong vận tải và logistics hiện đại, bài toán lập lộ trình xe giao hàng (\textit{last-mile delivery}) yêu cầu một phương tiện xuất phát từ kho trung tâm, đi qua $n-1$ điểm khách hàng đã biết tọa độ địa lý (mỗi điểm đúng một lần) và quay trở về kho với tổng quãng đường nhỏ nhất. Bài toán này được mô hình hóa thành \textbf{Bài toán Người du lịch (Traveling Salesman Problem -- TSP)}. Ngoài giao hàng và thu gom rác thải đô thị, TSP còn ứng dụng trực tiếp trong tối ưu đường chạy mũi khoan mạch in điện tử (PCB), lập trình tự gia công cơ khí và giải trình tự gen.
+
+\section{Mô hình toán học Quy hoạch nguyên tuyến tính (ILP)}
+Cho đồ thị đầy đủ $G=(V,E)$ với $V=\{1,2,\dots,n\}$ và ma trận khoảng cách $D=[d_{ij}]_{n\times n}$ ($d_{ij}\ge 0$). Với biến quyết định nhị phân $x_{ij} \in \{0,1\}$ ($x_{ij}=1$ nếu lộ trình đi trực tiếp từ $i$ sang $j$):
+\begin{align}
+    \min f(x) &= \sum_{i=1}^{n} \sum_{\substack{j=1 \\ j \neq i}}^{n} d_{ij} x_{ij} \\
+    \text{s.t.} \quad &\sum_{\substack{j=1 \\ j \neq i}}^{n} x_{ij} = 1, \quad \forall i \in V \\
+    &\sum_{\substack{i=1 \\ i \neq j}}^{n} x_{ij} = 1, \quad \forall j \in V \\
+    &\sum_{i \in S} \sum_{\substack{j \in S \\ j \neq i}} x_{ij} \le |S| - 1, \quad \forall S \subset V, \; 2 \le |S| \le n - 1 \quad \text{(DFJ Subtour Elimination)} \\
+    &x_{ij} \in \{0, 1\}, \quad \forall i, j \in V, \; i \neq j.
+\end{align}
+Dưới dạng hoán vị $\pi = (\pi_0, \pi_1, \dots, \pi_{n-1}) \in S_n$, hàm mục tiêu là:
+\begin{equation}
+    \min_{\pi \in S_n} f(\pi) = \sum_{k=0}^{n-2} d_{\pi_k, \pi_{k+1}} + d_{\pi_{n-1}, \pi_0}.
+\end{equation}
+
+\section{Ví dụ minh họa cỡ nhỏ ($n=5$)}
+Xét $n=5$ điểm có tọa độ: $0(0,0), 1(0,4), 2(3,4), 3(6,0), 4(3,0)$. Với đồ thị đối xứng, có $\frac{(5-1)!}{2} = 12$ chu trình phân biệt. Chu trình tối ưu là $\pi^* = (0 \to 1 \to 2 \to 3 \to 4 \to 0)$ với tổng chi phí $f^* = 4 + 3 + 5 + 3 + 3 = 18$.
+
+% ==================== CHƯƠNG 2 ====================
+\chapter{Độ phức tạp tính toán và Không gian tìm kiếm}
+
+\section{Phiên bản quyết định và Chứng minh NP-đầy đủ}
+\textbf{Phiên bản quyết định (TSP-DECISION):} Cho đồ thị đầy đủ $G=(V,E,d)$ và ngưỡng $L \in \mathbb{R}^+$. Hỏi có tồn tại chu trình Hamilton trong $G$ có tổng độ dài $\le L$ hay không?
+
+\begin{itemize}
+    \item \textbf{Thuộc lớp NP:} Với một chu trình ứng viên $\pi$, ta kiểm tra tính hoán vị và tính tổng $n$ cạnh $\sum d_{\pi_k, \pi_{k+1}} \le L$ trong thời gian đa thức $\mathcal{O}(n)$.
+    \item \textbf{Quy dẫn đa thức $\text{HAMILTONIAN-CYCLE} \le_p \text{TSP-DECISION}$ (Karp, 1972):} Cho đồ thị $G'=(V,E')$ của bài toán Chu trình Hamilton. Xây dựng đồ thị đầy đủ $G=(V,E)$ với $d_{ij} = 1$ nếu $(i,j)\in E'$ và $d_{ij} = 2$ nếu $(i,j)\notin E'$, đặt ngưỡng $L = n$. Khi đó $G'$ có chu trình Hamilton khi và chỉ khi $G$ có chu trình độ dài $\le n$. Phép quy dẫn tốn $\mathcal{O}(n^2)$, suy ra \texttt{TSP-DECISION} là NP-đầy đủ và bài toán tối ưu TSP là \textbf{NP-khó}.
+\end{itemize}
+
+\section{Kích thước không gian tìm kiếm}
+Trên đồ thị đối xứng $n$ đỉnh, số lượng chu trình phân biệt là $|\Omega| = \frac{(n-1)!}{2}$. Với $n=52$ (\texttt{berlin52}), $|\Omega| \approx 7.75 \times 10^{65}$, vượt xa khả năng duyệt vét cạn.
+
+% ==================== CHƯƠNG 3 ====================
+\chapter{Thuật toán chính xác (Exact Algorithms)}
+
+\section{Quy hoạch động Held--Karp $\mathcal{O}(n^2 2^n)$}
+Đặt $DP[S][u]$ là chi phí đường đi ngắn nhất từ đỉnh $0$, đi qua tập đỉnh $S \subseteq \{1,\dots,n-1\}$ và kết thúc tại $u \in S$:
+\begin{equation}
+    DP[S][u] = \min_{w \in S \setminus \{u\}} \left\{ DP[S \setminus \{u\}][w] + d_{w,u} \right\}, \quad f^* = \min_{u \in \{1,\dots,n-1\}} \left\{ DP[V\setminus\{0\}][u] + d_{u,0} \right\}.
+\end{equation}
+Độ phức tạp thời gian là $\mathcal{O}(n^2 2^n)$ và không gian là $\mathcal{O}(n 2^n)$.
+
+\section{Nhánh cận (Branch and Bound)}
+Sử dụng cận trên khởi tạo bằng Nearest Neighbor + 2-opt và cận dưới 2-cạnh ngắn nhất tại mỗi đỉnh:
+\begin{equation}
+    LB = \frac{1}{2} \sum_{i=0}^{n-1} (e_{i,1} + e_{i,2}) \le f^*.
+\end{equation}
+Khi đi qua cạnh $(u, v)$, cận dưới được cập nhật gia tăng bảo toàn tính khả chấp (\textit{admissible}): $\Delta LB = d_{u,v} - \frac{1}{2}(e_{u,\text{used}} + e_{v,2})$. Thực nghiệm cho thấy Held--Karp (tối ưu mảng phẳng \texttt{bytearray}) giải chính xác $n=21$ trong $10.12$ giây và đạt giới hạn $n_{\max} \approx 23$ trong khung thời gian 10 phút.
+
+% ==================== CHƯƠNG 4 ====================
+\chapter{Heuristic xây dựng và Tìm kiếm cục bộ}
+
+\section{Heuristic xây dựng (Constructive Heuristics)}
+Nhóm cài đặt 3 phương pháp tham lam trong \texttt{src/constructive.py}:
+\begin{enumerate}
+    \item \textbf{Nearest Neighbor (NN):} Chọn đỉnh chưa thăm gần nhất ở mỗi bước, độ phức tạp $\mathcal{O}(n^2)$.
+    \item \textbf{Multi-Start NN:} Chạy NN từ nhiều đỉnh xuất phát và giữ nghiệm tốt nhất, độ phức tạp $\mathcal{O}(k n^2)$.
+    \item \textbf{Cheapest Insertion (CI):} Chèn đỉnh chưa thăm $k$ vào cạnh $(i,j)$ có chi phí tăng thêm $\Delta = d_{ik} + d_{kj} - d_{ij}$ nhỏ nhất; độ phức tạp trường hợp xấu nhất $\mathcal{O}(n^3)$ và trung bình thực nghiệm tiệm cận $\mathcal{O}(n^2)$ nhờ lưu đệm vị trí chèn.
+\end{enumerate}
+
+\section{Tìm kiếm cục bộ và Đánh giá gia tăng (Delta Evaluation $\mathcal{O}(1)$)}
+Nhóm định nghĩa 3 cấu trúc lân cận và cài đặt cả hai chiến lược \textbf{First Improvement} và \textbf{Best Improvement}:
+\begin{itemize}
+    \item \textbf{Lân cận 2-opt:} Đảo ngược đoạn $\text{tour}[i\dots j]$, chi phí thay đổi tính trong $\mathcal{O}(1)$:
+    \[
+        \Delta_{\text{2-opt}}(i,j) = (d_{\text{tour}[i-1], \text{tour}[j]} + d_{\text{tour}[i], \text{tour}[(j+1)\bmod n]}) - (d_{\text{tour}[i-1], \text{tour}[i]} + d_{\text{tour}[j], \text{tour}[(j+1)\bmod n]}).
+    \]
+    \item \textbf{Lân cận Swap:} Đổi chỗ hai đỉnh $\text{tour}[i]$ và $\text{tour}[j]$, đánh giá sự thay đổi của 4 cạnh kề trong $\mathcal{O}(1)$.
+    \item \textbf{Lân cận Or-opt:} Dịch chuyển chuỗi $k \in \{1,2,3\}$ đỉnh liên tiếp sang vị trí mới, đánh giá gia tăng 3 cạnh bị thay đổi trong $\mathcal{O}(1)$.
+\end{itemize}
+
+% ==================== CHƯƠNG 5 ====================
+\chapter{Các giải thuật Metaheuristic và Thuật toán Lai}
+
+\section{Simulated Annealing (SA) -- Kirkpatrick et al. (1983)}
+Đơn lời giải; sử dụng lân cận hỗn hợp 2-opt ($90\%$) và Swap ($10\%$). Chấp nhận bước đi xấu hơn ($\Delta > 0$) với xác suất $e^{-\Delta/T}$, làm nguội hình học $T_{k+1} = \alpha T_k$ ($\alpha = 0.995$) kèm cơ chế hâm nóng lại (reheating) khi $T < T_{\min}$.
+
+\section{Tabu Search (TS) -- Glover (1986)}
+Đơn lời giải; duyệt tập ứng viên trong lân cận 2-opt, cấm cắt lại các cạnh vừa thay đổi trong $\theta = \lfloor 2.5\sqrt{n}\rfloor \pm 2$ vòng lặp. Áp dụng tiêu chí mong đợi (\textit{Aspiration Criterion}) khi phá kỷ lục toàn cục $f_{\text{best}}$.
+
+\section{Genetic Algorithm (GA) -- Holland (1975)}
+Quần thể ($P=60$); mã hóa hoán vị, chọn lọc đấu loại ($k=3$), lai ghép thứ tự \textbf{Order Crossover (OX)} và \textbf{PMX} bảo toàn tính hợp lệ của hoán vị, đột biến đảo đoạn/đổi chỗ ($p_m=0.20$), giữ ưu tú (\textit{Elitism} $E=4$).
+
+\section{Ant Colony Optimization (ACO / MMAS) -- Dorigo \& Stützle (2004)}
+Quần thể ($m=25$ kiến); xây dựng chu trình dựa trên vết mùi $\tau_{ij}^\alpha$ và heuristic $\eta_{ij}^\beta = (1/d_{ij})^\beta$ ($\alpha=1, \beta=3, \rho=0.15, q_0=0.5$) trên danh sách láng giềng gần (\textit{Candidate List} $k=20$), giới hạn mùi $[\tau_{\min}, \tau_{\max}]$.
+
+\section{Thuật toán Lai: Memetic Algorithm (GA + 2-opt + Double-Bridge)}
+Kết hợp lai ghép thứ tự OX của GA với tìm kiếm cục bộ 2-opt nhanh trên từng cá thể con (Lamarckian learning) và phép nhiễu 4-opt \textbf{Double-Bridge} để chống hội tụ sớm.
+
+% ==================== CHƯƠNG 6 ====================
+\chapter{Thực nghiệm, Phân tích tham số và Kiểm định thống kê}
+
+\section{Kết quả tổng hợp trên 12 thể hiện (600 lần chạy)}
+Bảng dưới đây trình bày kết quả thực nghiệm (10 seeds độc lập/thể hiện) trên các bộ dữ liệu nhỏ và bộ chuẩn TSPLIB:
+
+\begin{table}[htbp]
+\centering
+\caption{Kết quả so sánh 5 giải thuật trên các bộ dữ liệu chuẩn TSPLIB và tự sinh}
+\vspace{0.2cm}
+\footnotesize
+\begin{tabular}{llrrrrrr}
+\toprule
+\textbf{Thể hiện ($n$)} & \textbf{BKS $f^*$} & \textbf{Thuật toán} & \textbf{Best} & \textbf{Mean} & \textbf{Std} & \textbf{Best Gap (\%)} & \textbf{Mean Gap (\%)} \\
+\midrule
+\texttt{syn\_15} (15) & 966 & SA / TS / ACO / MA & \textbf{966.0} & \textbf{966.0} & 0.00 & \textbf{0.000\%} & \textbf{0.000\%} \\
+\texttt{syn\_18} (18) & 1013 & SA / TS / ACO / MA & \textbf{1013.0} & \textbf{1013.0} & 0.00 & \textbf{0.000\%} & \textbf{0.000\%} \\
+\midrule
+\texttt{eil51} (51) & 426 & SA & 430.0 & 433.6 & 2.84 & 0.939\% & 1.784\% \\
+ & & TS & 427.0 & 429.7 & 1.70 & 0.235\% & 0.869\% \\
+ & & GA & 429.0 & 439.9 & 7.31 & 0.704\% & 3.263\% \\
+ & & ACO & 427.0 & 428.5 & 0.97 & 0.235\% & 0.587\% \\
+ & & \textbf{Memetic} & \textbf{426.0} & \textbf{426.8} & \textbf{0.63} & \textbf{0.000\%} & \textbf{0.188\%} \\
+\midrule
+\texttt{berlin52} (52) & 7542 & SA & \textbf{7542.0} & 7650.5 & 129.01 & \textbf{0.000\%} & 1.439\% \\
+ & & TS & \textbf{7542.0} & 7762.9 & 164.28 & \textbf{0.000\%} & 2.929\% \\
+ & & GA & 7548.0 & 7857.2 & 180.93 & 0.080\% & 4.179\% \\
+ & & ACO & \textbf{7542.0} & 7559.3 & 54.71 & \textbf{0.000\%} & 0.229\% \\
+ & & \textbf{Memetic} & \textbf{7542.0} & \textbf{7542.0} & \textbf{0.00} & \textbf{0.000\%} & \textbf{0.000\%} \\
+\midrule
+\texttt{st70} (70) & 675 & SA & 677.0 & 686.8 & 8.02 & 0.296\% & 1.748\% \\
+ & & TS & 682.0 & 686.9 & 3.75 & 1.037\% & 1.763\% \\
+ & & GA & 694.0 & 708.8 & 13.71 & 2.815\% & 5.007\% \\
+ & & ACO & 676.0 & 680.1 & 2.96 & 0.148\% & 0.756\% \\
+ & & \textbf{Memetic} & \textbf{675.0} & \textbf{678.0} & \textbf{3.53} & \textbf{0.000\%} & \textbf{0.444\%} \\
+\midrule
+\texttt{eil76} (76) & 538 & SA & 546.0 & 552.0 & 5.27 & 1.487\% & 2.602\% \\
+ & & TS & 542.0 & 547.9 & 4.33 & 0.743\% & 1.840\% \\
+ & & GA & 551.0 & 563.7 & 7.67 & 2.416\% & 4.777\% \\
+ & & ACO & 539.0 & 544.0 & 2.75 & 0.186\% & 1.115\% \\
+ & & \textbf{Memetic} & \textbf{538.0} & \textbf{538.3} & \textbf{0.95} & \textbf{0.000\%} & \textbf{0.056\%} \\
+\midrule
+\texttt{kroA100} (100) & 21282 & SA & 21359.0 & 21671.5 & 214.07 & 0.362\% & 1.830\% \\
+ & & TS & 21365.0 & 21630.3 & 205.51 & 0.390\% & 1.637\% \\
+ & & GA & 21509.0 & 22296.4 & 529.01 & 1.067\% & 4.766\% \\
+ & & ACO & \textbf{21282.0} & 21350.6 & 70.07 & \textbf{0.000\%} & 0.322\% \\
+ & & \textbf{Memetic} & \textbf{21282.0} & \textbf{21285.4} & \textbf{6.11} & \textbf{0.000\%} & \textbf{0.016\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Kiểm định thống kê Friedman và Wilcoxon}
+\begin{itemize}
+    \item \textbf{Kiểm định Friedman ($N=12, df=4$):} Thứ hạng trung bình đạt \textbf{Memetic (1.7083)} $<$ \textbf{ACO (2.4583)} $<$ \textbf{TS (2.7083)} $<$ \textbf{SA (3.3750)} $<$ \textbf{GA (4.7500)}, với $\chi^2_F = 25.2000$, $F_F = 12.1579$, $p\text{-value} = 6.4 \times 10^{-5} < 0.0001$.
+    \item \textbf{Kiểm định dấu hạng Wilcoxon chính xác (Exact distribution):} So sánh cặp giữa Memetic và cả 4 thuật toán còn lại đều cho $W^- = 0.0$ và $p_{\text{exact}} < 0.05$ ($p_{\text{SA}} = 0.015625$, $p_{\text{TS}} = 0.031250$, $p_{\text{GA}} = 0.000977$, $p_{\text{ACO}} = 0.015625$), khẳng định sự vượt trội có ý nghĩa thống kê.
+\end{itemize}
+
+% ==================== CHƯƠNG 7 ====================
+\chapter{Kết luận, Phân công nhiệm vụ và Liêm chính học thuật}
+Báo cáo và mã nguồn đã hoàn thành đầy đủ mọi yêu cầu của Đề tài 1 cho nhóm 4 thành viên, đạt nghiệm tối ưu BKS trên tất cả các bộ dữ liệu chuẩn TSPLIB thử nghiệm và mở rộng thành công lên $n=1000$ đỉnh với Candidate List.
+
+\section{Bảng phân công công việc nhóm (4 thành viên)}
+\begin{center}
+\begin{tabular}{clllc}
+\toprule
+\textbf{STT} & \textbf{Họ và tên} & \textbf{MSSV} & \textbf{Nội dung phụ trách chính} & \textbf{Tỷ lệ} \\
+\midrule
+1 & \textit{[Trương Phú Thông]} & \textit{[068206013477]} & Mô hình ILP, Held--Karp, B\&B, Validator & 25\% \\
+2 & \textit{[Điền Họ tên TV 2]} & \textit{[MSSV 2]} & Constructive Heuristics, Local Search, Delta $\mathcal{O}(1)$ & 25\% \\
+3 & \textit{[Điền Họ tên TV 3]} & \textit{[MSSV 3]} & SA, Tabu Search, GA, Độ nhạy tham số & 25\% \\
+4 & \textit{[Điền Họ tên TV 4]} & \textit{[MSSV 4]} & ACO, Memetic, Kiểm định thống kê, GUI/Web & 25\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Tuyên bố Liêm chính học thuật và Sử dụng công cụ AI (Mục 5)}
+Nhóm cam kết toàn bộ thuật toán cốt lõi (\texttt{exact\_solver.py}, \texttt{constructive.py}, \texttt{local\_search.py}, \texttt{metaheuristics.py}, \texttt{statistical\_tests.py}) được tự cài đặt từ đầu bằng Python chuẩn, không gọi bất kỳ thư viện tối ưu hóa hộp đen nào (\texttt{OR-Tools}, \texttt{Concorde}, \texttt{DEAP}, \texttt{pymoo}). Mọi lời giải đều được kiểm chứng độc lập qua \texttt{src/validator.py}. Các công cụ AI hỗ trợ được sử dụng đúng quy định cho việc rà soát công thức LaTeX, gợi ý cấu trúc giao diện trực quan hóa Canvas/Tkinter và kiểm tra lỗi chính tả.
+
+\begin{thebibliography}{99}
+\bibitem{garey1979} M. R. Garey, D. S. Johnson, \textit{Computers and Intractability: A Guide to the Theory of NP-Completeness}, W. H. Freeman, 1979.
+\bibitem{karp1972} R. M. Karp, ``Reducibility among combinatorial problems'', \textit{Complexity of Computer Computations}, pp. 85--103, 1972.
+\bibitem{held1962} M. Held, R. M. Karp, ``A dynamic programming approach to sequencing problems'', \textit{J. SIAM}, 10(1), 196--210, 1962.
+\bibitem{reinelt1991} G. Reinelt, ``TSPLIB---A Traveling Salesman Problem Library'', \textit{ORSA Journal on Computing}, 3(4), 376--384, 1991.
+\bibitem{kirkpatrick1983} S. Kirkpatrick, C. D. Gelatt, M. P. Vecchi, ``Optimization by Simulated Annealing'', \textit{Science}, 220(4598), 671--680, 1983.
+\bibitem{glover1986} F. Glover, ``Future paths for integer programming and links to artificial intelligence'', \textit{Computers \& Operations Research}, 13(5), 533--549, 1986.
+\bibitem{holland1975} J. H. Holland, \textit{Adaptation in Natural and Artificial Systems}, University of Michigan Press, 1975.
+\bibitem{dorigo2004} M. Dorigo, T. Stützle, \textit{Ant Colony Optimization}, MIT Press, 2004.
+\bibitem{moscato1989} P. Moscato, ``On Evolution, Search, Optimization, Genetic Algorithms and Martial Arts: Towards Memetic Algorithms'', Caltech Report 826, 1989.
+\end{thebibliography}
+
+\end{document}

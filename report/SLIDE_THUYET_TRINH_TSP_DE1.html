@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Slide Thuyết Trình BTL — Đề tài 1: Bài toán Người du lịch (TSP)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #38bdf8;
+      --accent2: #4ade80;
+      --accent3: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    .deck {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 48px 72px 76px 72px;
+      flex-direction: column;
+      justify-content: flex-start;
+      background: radial-gradient(circle at top right, #1e293b 0%, #0f172a 70%);
+    }
+    .slide.active { display: flex; }
+    .slide-header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 14px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .slide-header h2 {
+      font-size: 1.95rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .slide-tag {
+      font-size: 0.9rem;
+      color: var(--muted);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .title-slide h1 {
+      font-size: 2.6rem;
+      color: var(--accent);
+      margin-bottom: 14px;
+      line-height: 1.25;
+    }
+    .title-slide h2 {
+      font-size: 1.55rem;
+      color: var(--text);
+      font-weight: 500;
+      margin-bottom: 28px;
+    }
+    .badge-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+    .badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      align-items: stretch;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      flex: 1;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.78);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    .card h3 {
+      font-size: 1.2rem;
+      color: var(--accent2);
+      margin-bottom: 12px;
+    }
+    ul {
+      padding-left: 22px;
+      line-height: 1.65;
+      font-size: 1.06rem;
+    }
+    li { margin-bottom: 8px; }
+    code, .math {
+      font-family: 'Consolas', 'Courier New', monospace;
+      background: rgba(15, 23, 42, 0.8);
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: #38bdf8;
+      font-size: 0.96em;
+    }
+    .formula-box {
+      background: #090f1d;
+      border-left: 4px solid var(--accent);
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-family: 'Cambria Math', 'Times New Roman', serif;
+      font-size: 1.15rem;
+      line-height: 1.55;
+      color: #f1f5f9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+      font-size: 0.96rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      text-align: center;
+    }
+    th {
+      background: #1e293b;
+      color: var(--accent);
+      font-weight: 600;
+    }
+    td.left, th.left { text-align: left; }
+    tr.highlight { background: rgba(74, 222, 128, 0.12); font-weight: 600; }
+    .controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 32px;
+      z-index: 100;
+    }
+    .btn {
+      background: #1e293b;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: 0.15s;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--accent); color: #0f172a; font-weight: 600; }
+    .progress {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    @media print {
+      body { overflow: visible; height: auto; background: #fff; color: #000; }
+      .controls { display: none !important; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: 100vh;
+        border-bottom: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 1: TRANG BÌA -->
+    <section class="slide title-slide active">
+      <div class="slide-tag" style="margin-bottom:18px;">TRƯỜNG ĐẠI HỌC GIAO THÔNG VẬN TẢI TP. HỒ CHÍ MINH (UTH) — NGÀNH CNTT</div>
+      <h1>ĐỀ TÀI 1: LỘ TRÌNH XE GIAO HÀNG<br/>BÀI TOÁN NGƯỜI DU LỊCH (TSP)</h1>
+      <h2>Học phần: Phân tích thiết kế giải thuật — Các bài toán NP-khó &amp; Giải thuật Metaheuristic</h2>
+      <div class="badge-row">
+        <div class="badge">Quy mô: <strong>Nhóm 4 thành viên</strong></div>
+        <div class="badge">Chính xác: <strong>Held–Karp DP &amp; Nhánh cận</strong></div>
+        <div class="badge">Local Search: <strong>2-opt, Swap, Or-opt (Delta O(1))</strong></div>
+        <div class="badge">4 Metaheuristic + 1 Lai: <strong>SA, TS, GA, ACO, Memetic</strong></div>
+        <div class="badge">Thống kê: <strong>Friedman &amp; Exact Wilcoxon</strong></div>
+      </div>
+      <div class="card" style="max-width:820px; width:100%; text-align:left;">
+        <h3>Danh sách thành viên nhóm &amp; Phân công thuyết trình (15–20 phút)</h3>
+        <table>
+          <thead>
+            <tr><th>STT</th><th class="left">Họ và tên</th><th>MSSV</th><th class="left">Phần phụ trách &amp; Báo cáo</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td class="left"><em>[Điền Họ tên TV 1]</em></td><td><em>[MSSV 1]</em></td><td class="left">Mô hình ILP, Tính NP-khó, Held–Karp DP, Nhánh cận, Validator</td></tr>
+            <tr><td>2</td><td class="left"><em>[Điền Họ tên TV 2]</em></td><td><em>[MSSV 2]</em></td><td class="left">Constructive Heuristics (NN, CI), Local Search 3 lân cận &amp; Delta O(1)</td></tr>
+            <tr><td>3</td><td class="left"><em>[Điền Họ tên TV 3]</em></td><td><em>[MSSV 3]</em></td><td class="left">Simulated Annealing (SA), Tabu Search (TS), Genetic Algorithm (GA)</td></tr>
+            <tr><td>4</td><td class="left"><em>[Điền Họ tên TV 4]</em></td><td><em>[MSSV 4]</em></td><td class="left">ACO (MMAS), Thuật toán Lai Memetic, Kiểm định thống kê &amp; Demo GUI/Web</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: PHÁT BIỂU BÀI TOÁN & ILP -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>1. Phát biểu bài toán &amp; Mô hình toán học ILP</h2>
+        <span class="slide-tag">Chương 1 — Mô hình hóa</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Bài toán thực tế &amp; Ứng dụng</h3>
+          <ul>
+            <li><strong>Giao hàng chặng cuối (Last-mile Delivery):</strong> Một xe xuất phát từ kho trung tâm (đỉnh 0), đi qua đúng một lần tất cả <code>n-1</code> điểm khách hàng và quay về kho sao cho tổng quãng đường nhỏ nhất.</li>
+            <li><strong>Ứng dụng công nghiệp:</strong>
+              <ul>
+                <li>Tối ưu đường chạy mũi khoan bản mạch in điện tử (PCB CNC drilling — bộ dữ liệu <code>kroA100</code>, <code>berlin52</code>).</li>
+                <li>Lập lịch gia công cơ khí và giải trình tự gen ADN.</li>
+              </ul>
+            </li>
+            <li><strong>Biểu diễn lời giải:</strong> Hoán vị vòng <code>tour = [v_0, v_1, ..., v_{n-1}]</code> gồm <code>n</code> đỉnh đôi một phân biệt.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Mô hình Quy hoạch nguyên tuyến tính (ILP)</h3>
+          <p style="margin-bottom:8px; color:var(--muted);">Biến nhị phân <code>x_{ij} ∈ {0, 1}</code> bằng 1 nếu xe đi trực tiếp từ <code>i</code> sang <code>j</code>:</p>
+          <div class="formula-box">
+            min f(x) = ∑<sub>i=1..n</sub> ∑<sub>j≠i</sub> d<sub>ij</sub> x<sub>ij</sub><br/>
+            s.t. &nbsp; ∑<sub>j≠i</sub> x<sub>ij</sub> = 1, &nbsp; ∀i ∈ V &nbsp; (Ràng buộc đi ra)<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ∑<sub>i≠j</sub> x<sub>ij</sub> = 1, &nbsp; ∀j ∈ V &nbsp; (Ràng buộc đi vào)<br/>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ∑<sub>i,j ∈ S</sub> x<sub>ij</sub> ≤ |S| - 1, &nbsp; ∀S ⊂ V, 2 ≤ |S| ≤ n-1 &nbsp; (DFJ)
+          </div>
+          <ul>
+            <li>Ràng buộc <strong>DFJ (Dantzig–Fulkerson–Johnson)</strong> gồm <code>2^n - 2n - 2</code> bất đẳng thức loại bỏ chu trình con (subtour).</li>
+            <li>Mọi lời giải của nhóm đều được kiểm tra độc lập bằng hàm <code>validate_tour()</code> trong <code>src/validator.py</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: ĐỘ PHỨC TẠP NP-KHÓ -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>2. Chứng minh NP-khó &amp; Sự bùng nổ tổ hợp</h2>
+        <span class="slide-tag">Chương 2 — Độ phức tạp</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Chứng minh TSP-DECISION là NP-đầy đủ (Karp, 1972)</h3>
+          <ul>
+            <li><strong>Bài toán quyết định:</strong> Cho đồ thị đầy đủ <code>G=(V,E,d)</code> và ngưỡng <code>L</code>. Có tồn tại chu trình Hamilton độ dài <code>≤ L</code>?</li>
+            <li><strong>Thuộc lớp NP:</strong> Kiểm tra một hoán vị ứng viên và cộng <code>n</code> cạnh chỉ tốn thời gian đa thức <code>O(n)</code>.</li>
+            <li><strong>Quy dẫn đa thức <code>HAMILTONIAN-CYCLE ≤_p TSP-DECISION</code>:</strong>
+              <div class="formula-box">
+                d<sub>ij</sub> = 1 nếu (i, j) ∈ E(G') &nbsp;|&nbsp; d<sub>ij</sub> = 2 nếu (i, j) ∉ E(G')<br/>
+                Đặt ngưỡng L = n.
+              </div>
+            </li>
+            <li><code>G'</code> có chu trình Hamilton ⇔ <code>G</code> có chu trình TSP chi phí <code>≤ n</code>. Do đó bài toán tối ưu TSP là <strong>NP-khó</strong>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Kích thước không gian tìm kiếm <code>|Ω| = (n - 1)! / 2</code></h3>
+          <table>
+            <thead>
+              <tr><th>Số đỉnh n</th><th>Số chu trình (n-1)!/2</th><th>Thời gian duyệt vét cạn (10<sup>9</sup> phép/giây)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>n = 5</td><td>12</td><td>0.012 micro-giây</td></tr>
+              <tr><td>n = 10</td><td>181,440</td><td>0.18 mili-giây</td></tr>
+              <tr><td>n = 15</td><td>4.35 × 10<sup>10</sup></td><td>43.5 giây</td></tr>
+              <tr><td>n = 20</td><td>6.08 × 10<sup>16</sup></td><td>1.93 năm</td></tr>
+              <tr class="highlight"><td>n = 52 (berlin52)</td><td>7.75 × 10<sup>65</sup></td><td>2.46 × 10<sup>49</sup> năm (&gt; tuổi vũ trụ)</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:14px; color:var(--accent3);">⇒ Bắt buộc phải kết hợp Quy hoạch động, Nhánh cận (cho <code>n ≤ 22</code>) và Metaheuristic (cho <code>n ≥ 40</code>).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: THUẬT TOÁN CHÍNH XÁC -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>3. Thuật toán Chính xác: Held–Karp DP &amp; Nhánh cận</h2>
+        <span class="slide-tag">Chương 3 — Exact Algorithms</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>1. Quy hoạch động trạng thái Bitmask Held–Karp</h3>
+          <div class="formula-box">
+            DP[S][u] = min<sub>w ∈ S \ {u}</sub> { DP[S \ {u}][w] + d<sub>w,u</sub> }<br/>
+            Độ phức tạp: Thời gian O(n²·2<sup>n</sup>), Không gian O(n·2<sup>n</sup>)
+          </div>
+          <ul>
+            <li><strong>Kỹ thuật tối ưu bộ nhớ trong <code>src/exact_solver.py</code>:</strong> Dùng mảng phẳng 1 chiều <code>bytearray</code> cho bảng truy vết <code>parent</code> và chỉ giữ 2 tầng kích thước tập con liên tiếp bằng <code>array('d')</code>, giúp giải chính xác tới <code>n = 21</code> chỉ trong <code>10.12s</code>.</li>
+          </ul>
+          <h3 style="margin-top:16px;">2. Nhánh cận (Branch &amp; Bound)</h3>
+          <ul>
+            <li>Khởi tạo cận trên <code>UB</code> bằng <code>Nearest Neighbor + 2-opt</code>.</li>
+            <li>Cận dưới 2-cạnh ngắn nhất khả chấp (admissible): <code>LB = 0.5 * ∑ (e_{i,1} + e_{i,2}) ≤ f*</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Kết quả thực nghiệm Chính xác (Khớp 100% nghiệm tối ưu)</h3>
+          <table>
+            <thead>
+              <tr><th>Bộ dữ liệu</th><th>n</th><th>Nghiệm tối ưu f*</th><th>Held–Karp (s)</th><th>B&amp;B (s)</th><th>Số nút B&amp;B</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>syn_10</code></td><td>10</td><td>1078.0</td><td>0.0014s</td><td>0.0020s</td><td>943</td></tr>
+              <tr><td><code>syn_12</code></td><td>12</td><td>1269.0</td><td>0.0080s</td><td>0.0628s</td><td>29,957</td></tr>
+              <tr><td><code>syn_15</code></td><td>15</td><td>966.0</td><td>0.0725s</td><td>0.0566s</td><td>26,282</td></tr>
+              <tr><td><code>syn_16</code></td><td>16</td><td>1101.0</td><td>0.1683s</td><td>0.1260s</td><td>56,964</td></tr>
+              <tr><td><code>syn_18</code></td><td>18</td><td>1013.0</td><td>0.8407s</td><td>4.7495s</td><td>2,237,550</td></tr>
+              <tr class="highlight"><td><code>scale_21</code></td><td>21</td><td>3886.0</td><td>10.1220s</td><td>—</td><td>2.1 × 10<sup>6</sup> TT</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:12px; color:var(--muted);">Giới hạn khả thi thực tế (trong 10 phút): Held–Karp đạt <code>n_max ≈ 23</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: HEURISTIC XÂY DỰNG & LOCAL SEARCH DELTA O(1) -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>4. Heuristic Xây dựng &amp; Tìm kiếm cục bộ (Delta O(1))</h2>
+        <span class="slide-tag">Chương 4 — Constructive &amp; Local Search</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>3 Thuật toán Tham lam &amp; 3 Cấu trúc Lân cận</h3>
+          <ul>
+            <li><strong>Constructive Heuristics (<code>src/constructive.py</code>):</strong>
+              <ul>
+                <li><code>Nearest Neighbor (NN)</code> &amp; <code>Multi-Start NN</code>: <code>O(n²)</code>.</li>
+                <li><code>Cheapest Insertion (CI)</code>: Chèn đỉnh làm tăng ít nhất <code>Δ = d_{ik} + d_{kj} - d_{ij}</code>, lưu đệm vị trí chèn.</li>
+              </ul>
+            </li>
+            <li><strong>Local Search (<code>src/local_search.py</code> — First &amp; Best Improvement):</strong>
+              <ul>
+                <li><strong>Lân cận <code>2-opt</code> (Đảo đoạn):</strong> Xóa 2 cạnh chéo, nối lại 2 cạnh mới:
+                  <div class="formula-box" style="font-size:1rem; padding:8px 12px;">Δ<sub>2-opt</sub> = (d<sub>a,c</sub> + d<sub>b,d</sub>) - (d<sub>a,b</sub> + d<sub>c,d</sub>) &nbsp; → O(1)</div>
+                </li>
+                <li><strong>Lân cận <code>Swap</code> (Đổi chỗ 2 đỉnh):</strong> Đánh giá 4 cạnh kề trong <code>O(1)</code>.</li>
+                <li><strong>Lân cận <code>Or-opt</code> (Dịch đoạn 1–3 đỉnh):</strong> Đánh giá 3 cạnh trong <code>O(1)</code>.</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>So sánh Chất lượng Lân cận trên TSPLIB</h3>
+          <table>
+            <thead>
+              <tr><th>Bộ dữ liệu (BKS)</th><th>NN</th><th>CI</th><th>2-opt (FI)</th><th>2-opt (BI)</th><th>Swap (FI)</th><th>Or-opt (FI)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>eil51</code> (426)</td><td>511</td><td>490</td><td>458</td><td><strong>444</strong></td><td>505</td><td>464</td></tr>
+              <tr><td><code>berlin52</code> (7542)</td><td>8980</td><td>9013</td><td><strong>7762</strong></td><td>7992</td><td>8665</td><td>7995</td></tr>
+              <tr><td><code>st70</code> (675)</td><td>806</td><td>775</td><td>724</td><td><strong>712</strong></td><td>786</td><td>747</td></tr>
+              <tr><td><code>eil76</code> (538)</td><td>625</td><td>610</td><td><strong>574</strong></td><td>576</td><td>615</td><td>576</td></tr>
+              <tr class="highlight"><td><code>kroA100</code> (21282)</td><td>26856</td><td>25515</td><td>22625</td><td><strong>22156</strong></td><td>26085</td><td>24156</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:12px; color:var(--accent2);"><strong>Nhận xét:</strong> Lân cận <code>2-opt</code> giúp gỡ trực tiếp các cặp cạnh giao cắt hình học phẳng, giảm sai số từ ~21% (NN) xuống chỉ còn 2.9%–4.1% trong chưa đầy 1.5ms.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: 4 METAHEURISTIC & MEMETIC -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>5. Thiết kế 4 Giải thuật Metaheuristic &amp; Thuật toán Lai</h2>
+        <span class="slide-tag">Chương 5 — Metaheuristics &amp; Hybrid</span>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>1. Simulated Annealing (SA)</h3>
+          <ul>
+            <li><strong>Nhóm:</strong> Đơn lời giải (TV 1).</li>
+            <li>Lân cận hỗn hợp: <code>90% 2-opt + 10% Swap</code> với Delta <code>O(1)</code>.</li>
+            <li>Nhận bước đi xấu (<code>Δ &gt; 0</code>) với xác suất Boltzmann <code>exp(-Δ / T)</code>.</li>
+            <li>Làm nguội hình học <code>T_{k+1} = α·T_k</code> (<code>α = 0.995</code>) kèm cơ chế <strong>Reheating</strong> khi bị kẹt.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>2. Tabu Search (TS)</h3>
+          <ul>
+            <li><strong>Nhóm:</strong> Đơn lời giải (TV 2).</li>
+            <li>Duyệt danh sách ứng viên trong lân cận <code>2-opt</code>.</li>
+            <li><strong>Tabu List:</strong> Cấm cắt lại các cạnh vừa thêm trong <code>θ = ⌊2.5√n⌋ ± 2</code> vòng lặp.</li>
+            <li><strong>Aspiration Criterion:</strong> Bỏ qua lệnh cấm nếu đạt kỷ lục toàn cục <code>f &lt; f_best</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>3. Genetic Algorithm (GA)</h3>
+          <ul>
+            <li><strong>Nhóm:</strong> Quần thể <code>P = 60</code> (TV 3).</li>
+            <li>Mã hóa hoán vị trực tiếp; chọn lọc đấu loại <code>k = 3</code>.</li>
+            <li>Lai ghép <strong>Order Crossover (OX)</strong> &amp; <strong>PMX</strong> bảo toàn hoán vị hợp lệ 100%.</li>
+            <li>Đột biến đảo đoạn (<code>p_m = 0.20</code>) + giữ ưu tú <code>Elitism = 4</code>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>4. Ant Colony (ACO / MMAS)</h3>
+          <ul>
+            <li><strong>Nhóm:</strong> Quần thể <code>m = 25</code> kiến (TV 4).</li>
+            <li>Xác suất chọn cạnh dựa trên <code>[τ_{ij}]^α · [1/d_{ij}]^β</code> (<code>α=1, β=3</code>) trên <strong>Candidate List</strong> (<code>k=20</code>).</li>
+            <li>Cập nhật mùi theo kiến tốt nhất kèm giới hạn <code>[τ_min, τ_max]</code> (MMAS) chống hội tụ sớm.</li>
+          </ul>
+        </div>
+        <div class="card" style="grid-column: span 2; border-color: var(--accent2);">
+          <h3>5. Thuật toán Lai: Memetic Algorithm (GA + Local Search 2-opt + Double-Bridge)</h3>
+          <ul>
+            <li><strong>Cơ chế kết hợp Exploration &amp; Exploitation:</strong> Quần thể tinh gọn (<code>P = 28</code>) sử dụng phép lai <strong>OX</strong> để truyền đạt các đoạn chu trình tốt giữa các cá thể cha mẹ, sau đó áp dụng ngay <strong>Tìm kiếm cục bộ 2-opt (First Improvement)</strong> để đưa mỗi cá thể con về cực trị địa phương (<em>Lamarckian learning</em>).</li>
+            <li><strong>Đột biến 4-opt Double-Bridge:</strong> Khi cá thể bị trùng lặp hoặc kẹt ở hố sâu cục bộ mà 2-opt/3-opt không thể thoát ra, phép nhiễu <code>double_bridge_kick</code> cắt 4 cạnh và nối chéo để nhảy sang vùng lân cận mới.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: KẾT QUẢ THỰC NGHIỆM TRÊN TSPLIB -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>6. Kết quả Thực nghiệm 600 lần chạy (Cùng ngân sách thời gian)</h2>
+        <span class="slide-tag">Chương 6 — Benchmark TSPLIB</span>
+      </div>
+      <div class="card" style="flex:1;">
+        <p style="margin-bottom:8px; color:var(--muted);">Mỗi thuật toán chạy <strong>10 seeds độc lập</strong> trên mỗi bộ dữ liệu với <strong>cùng ngân sách thời gian</strong> (<code>0.35s</code> cho <code>eil51, berlin52</code>; <code>0.45s</code> cho <code>st70, eil76</code>; <code>0.60s</code> cho <code>kroA100</code>):</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Bộ dữ liệu (BKS)</th>
+              <th>SA (Best / Mean ± Std)</th>
+              <th>TS (Best / Mean ± Std)</th>
+              <th>GA (Best / Mean ± Std)</th>
+              <th>ACO (Best / Mean ± Std)</th>
+              <th>Memetic (Best / Mean ± Std)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>syn_10..18</code> (5 bộ nhỏ)</td>
+              <td><strong>0.00% Gap</strong> (5/5 tối ưu)</td>
+              <td><strong>0.00% Gap</strong> (5/5 tối ưu)</td>
+              <td>0.00% Best Gap</td>
+              <td><strong>0.00% Gap</strong> (5/5 tối ưu)</td>
+              <td class="highlight"><strong>0.00% Gap (Tuyệt đối)</strong></td>
+            </tr>
+            <tr>
+              <td><code>eil51</code> (BKS = 426)</td>
+              <td>430 / 433.6 ± 2.84</td>
+              <td>427 / 429.7 ± 1.70</td>
+              <td>429 / 439.9 ± 7.31</td>
+              <td>427 / 428.5 ± 0.97</td>
+              <td class="highlight"><strong>426 (0.00%) / 426.8 ± 0.63</strong></td>
+            </tr>
+            <tr>
+              <td><code>berlin52</code> (BKS = 7542)</td>
+              <td><strong>7542</strong> / 7650.5 ± 129.0</td>
+              <td><strong>7542</strong> / 7762.9 ± 164.3</td>
+              <td>7548 / 7857.2 ± 180.9</td>
+              <td><strong>7542</strong> / 7559.3 ± 54.7</td>
+              <td class="highlight"><strong>7542 (0.00%) / 7542.0 ± 0.00</strong></td>
+            </tr>
+            <tr>
+              <td><code>st70</code> (BKS = 675)</td>
+              <td>677 / 686.8 ± 8.02</td>
+              <td>682 / 686.9 ± 3.75</td>
+              <td>694 / 708.8 ± 13.71</td>
+              <td>676 / 680.1 ± 2.96</td>
+              <td class="highlight"><strong>675 (0.00%) / 678.0 ± 3.53</strong></td>
+            </tr>
+            <tr>
+              <td><code>eil76</code> (BKS = 538)</td>
+              <td>546 / 552.0 ± 5.27</td>
+              <td>542 / 547.9 ± 4.33</td>
+              <td>551 / 563.7 ± 7.67</td>
+              <td>539 / 544.0 ± 2.75</td>
+              <td class="highlight"><strong>538 (0.00%) / 538.3 ± 0.95</strong></td>
+            </tr>
+            <tr>
+              <td><code>kroA100</code> (BKS = 21282)</td>
+              <td>21359 / 21671.5 ± 214.1</td>
+              <td>21365 / 21630.3 ± 205.5</td>
+              <td>21509 / 22296.4 ± 529.0</td>
+              <td><strong>21282</strong> / 21350.6 ± 70.1</td>
+              <td class="highlight"><strong>21282 (0.00%) / 21285.4 ± 6.11</strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="margin-top:12px; color:var(--accent2);">⇒ <strong>Memetic Algorithm</strong> tìm ra chính xác <strong>100% nghiệm tối ưu BKS (Best Gap = 0.000%)</strong> trên tất cả các bộ dữ liệu chuẩn TSPLIB thử nghiệm!</p>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: KIỂM ĐỊNH THỐNG KÊ & MỞ RỘNG N=1000 -->
+    <section class="slide">
+      <div class="slide-header">
+        <h2>7. Kiểm định Thống kê Phi tham số &amp; Mở rộng n = 1000</h2>
+        <span class="slide-tag">Điểm cộng (+2.0đ)</span>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Kiểm định Friedman &amp; Exact Wilcoxon Signed-Rank</h3>
+          <ul>
+            <li><strong>Kiểm định Friedman (N = 12 bộ dữ liệu, df = 4):</strong>
+              <div class="formula-box" style="font-size:1rem;">
+                χ²<sub>F</sub> = 25.2000, &nbsp; F<sub>F</sub> = 12.1579, &nbsp; p = 6.4 × 10<sup>-5</sup> &lt; 0.0001
+              </div>
+              Thứ hạng trung bình: <strong>Memetic (1.71)</strong> &lt; <strong>ACO (2.46)</strong> &lt; <strong>TS (2.71)</strong> &lt; <strong>SA (3.38)</strong> &lt; <strong>GA (4.75)</strong>.
+            </li>
+            <li><strong>Kiểm định Wilcoxon chính xác (Exact Two-tailed p-value):</strong></li>
+          </ul>
+          <table>
+            <thead>
+              <tr><th>Cặp so sánh</th><th>W<sup>+</sup></th><th>W<sup>-</sup></th><th>p-value (Exact)</th><th>Kết luận (α=0.05)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>SA vs Memetic</td><td>28.0</td><td>0.0</td><td><strong>0.015625</strong></td><td>Có ý nghĩa thống kê</td></tr>
+              <tr><td>TS vs Memetic</td><td>21.0</td><td>0.0</td><td><strong>0.031250</strong></td><td>Có ý nghĩa thống kê</td></tr>
+              <tr><td>GA vs Memetic</td><td>66.0</td><td>0.0</td><td><strong>0.000977</strong></td><td>Có ý nghĩa thống kê</td></tr>
+              <tr><td>ACO vs Memetic</td><td>28.0</td><td>0.0</td><td><strong>0.015625</strong></td><td>Có ý nghĩa thống kê</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Mở rộng quy mô lớn n = 1000 &amp; Demo Trực quan hóa</h3>
+          <ul>
+            <li><strong>Thử thách n = 1000 (<code>syn_1000</code>):</strong> Một vòng quét 2-opt đầy đủ gồm <code>499,500</code> cặp cạnh.</li>
+            <li><strong>Giải pháp Candidate List (k = 20) + Don't-Look Bits:</strong>
+              <ul>
+                <li>Khởi tạo Nearest Neighbor: chi phí <code>308,654.0</code> (<code>0.037s</code>).</li>
+                <li>Sau 2-opt + Candidate List: giảm xuống <strong><code>262,592.0</code> (-14.92%)</strong> chỉ trong <strong><code>0.0020 giây</code></strong>!</li>
+              </ul>
+            </li>
+            <li style="margin-top:14px;"><strong>Demo Trực tiếp Giao diện Trực quan hóa:</strong>
+              <div style="margin-top:10px;">
+                <a class="btn" href="../visualizer/index.html" target="_blank" style="background:var(--accent); color:#0f172a; font-weight:700;">🚀 Mở Web Visualizer Tương tác Thời gian thực</a>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- THANH ĐIỀU KHIỂN -->
+  <div class="controls">
+    <div>
+      <button class="btn" onclick="prevSlide()">← Slide trước</button>
+      <button class="btn" onclick="nextSlide()" style="margin-left:8px;">Slide tiếp →</button>
+    </div>
+    <div class="progress" id="progressText">Slide 1 / 8 (Dùng phím mũi tên ← → để chuyển slide)</div>
+    <div>
+      <button class="btn" onclick="window.print()">🖨️ In / Lưu thành PDF</button>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const progressText = document.getElementById('progressText');
+    let idx = 0;
+    function showSlide(n) {
+      slides[idx].classList.remove('active');
+      idx = (n + slides.length) % slides.length;
+      slides[idx].classList.add('active');
+      progressText.textContent = `Slide ${idx + 1} / ${slides.length} (Dùng phím mũi tên ← → để chuyển slide)`;
+    }
+    function nextSlide() { showSlide(idx + 1); }
+    function prevSlide() { showSlide(idx - 1); }
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+  </script>
+</body>
+</html>

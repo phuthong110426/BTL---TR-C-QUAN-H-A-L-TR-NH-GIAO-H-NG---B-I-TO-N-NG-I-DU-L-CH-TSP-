@@ -1,0 +1,148 @@
+{
+  "friedman": {
+    "avg_ranks": {
+      "SA": 3.375,
+      "TS": 2.7083,
+      "GA": 4.75,
+      "ACO": 2.4583,
+      "Memetic": 1.7083
+    },
+    "chi2_stat": 25.2,
+    "f_stat": 12.1579,
+    "df": 4,
+    "n_instances": 12,
+    "p_value": 6.4e-05,
+    "instance_ranks": [
+      [
+        3.0,
+        3.0,
+        3.0,
+        3.0,
+        3.0
+      ],
+      [
+        2.0,
+        2.0,
+        5.0,
+        4.0,
+        2.0
+      ],
+      [
+        2.5,
+        2.5,
+        5.0,
+        2.5,
+        2.5
+      ],
+      [
+        2.5,
+        2.5,
+        5.0,
+        2.5,
+        2.5
+      ],
+      [
+        2.5,
+        2.5,
+        5.0,
+        2.5,
+        2.5
+      ],
+      [
+        5.0,
+        2.0,
+        4.0,
+        2.0,
+        2.0
+      ],
+      [
+        4.0,
+        2.0,
+        5.0,
+        3.0,
+        1.0
+      ],
+      [
+        3.0,
+        4.0,
+        5.0,
+        2.0,
+        1.0
+      ],
+      [
+        4.0,
+        3.0,
+        5.0,
+        2.0,
+        1.0
+      ],
+      [
+        4.0,
+        3.0,
+        5.0,
+        2.0,
+        1.0
+      ],
+      [
+        4.0,
+        3.0,
+        5.0,
+        2.0,
+        1.0
+      ],
+      [
+        4.0,
+        3.0,
+        5.0,
+        2.0,
+        1.0
+      ]
+    ]
+  },
+  "wilcoxon_vs_memetic": [
+    {
+      "comparison": "SA vs Memetic",
+      "w_plus": 28.0,
+      "w_minus": 0.0,
+      "w_stat": 0.0,
+      "z_score": 2.2819,
+      "p_value": 0.015625,
+      "method": "exact",
+      "n_effective": 7,
+      "significant_alpha_005": true
+    },
+    {
+      "comparison": "TS vs Memetic",
+      "w_plus": 21.0,
+      "w_minus": 0.0,
+      "w_stat": 0.0,
+      "z_score": 2.0966,
+      "p_value": 0.03125,
+      "method": "exact",
+      "n_effective": 6,
+      "significant_alpha_005": true
+    },
+    {
+      "comparison": "GA vs Memetic",
+      "w_plus": 66.0,
+      "w_minus": 0.0,
+      "w_stat": 0.0,
+      "z_score": 2.8896,
+      "p_value": 0.000977,
+      "method": "exact",
+      "n_effective": 11,
+      "significant_alpha_005": true
+    },
+    {
+      "comparison": "ACO vs Memetic",
+      "w_plus": 28.0,
+      "w_minus": 0.0,
+      "w_stat": 0.0,
+      "z_score": 2.286,
+      "p_value": 0.015625,
+      "method": "exact",
+      "n_effective": 7,
+      "significant_alpha_005": true
+    }
+  ]
+}

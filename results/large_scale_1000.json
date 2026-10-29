@@ -1,0 +1,11 @@
+{
+  "instance": "syn_1000",
+  "n": 1000,
+  "candidate_k": 20,
+  "nn_cost": 186315.0,
+  "nn_time_sec": 0.0684,
+  "cl_2opt_cost": 177176.0,
+  "cl_2opt_time_sec": 0.0057,
+  "cl_2opt_steps": 112,
+  "improvement_pct": 4.91
+}
