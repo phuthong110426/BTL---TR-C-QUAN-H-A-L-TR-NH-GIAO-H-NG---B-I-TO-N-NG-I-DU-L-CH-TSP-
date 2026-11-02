@@ -96,11 +96,4 @@ Nhóm cung cấp 2 giao diện trực quan hóa:
 
 ---
 
-## 4. Phân công công việc nhóm (4 thành viên)
 
-| Thành viên | Thuật toán chịu trách nhiệm chính | Phần việc chung & Thực nghiệm |
-| :--- | :--- | :--- |
-| **Thành viên 1** | **Simulated Annealing (SA)** + Thuật toán chính xác **Held–Karp DP** | Mô hình hóa toán học, chứng minh NP-khó, thực nghiệm dữ liệu nhỏ |
-| **Thành viên 2** | **Tabu Search (TS)** + Thuật toán chính xác **Nhánh cận (B&B)** | Cài đặt Heuristic xây dựng (NN, Cheapest Insertion), hàm kiểm tra hợp lệ |
-| **Thành viên 3** | **Genetic Algorithm (GA - OX/PMX)** + Tìm kiếm cục bộ (**2-opt, Swap**) | Thiết kế lân cận, đánh giá gia tăng (Delta Evaluation), phân tích độ nhạy tham số |
-| **Thành viên 4** | **Ant Colony Optimization (ACO)** + **Thuật toán Lai (Memetic)** + **Or-opt** | Kiểm định thống kê (Friedman, Wilcoxon), trực quan hóa lộ trình & tổng hợp Báo cáo |
